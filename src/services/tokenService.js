@@ -8,7 +8,7 @@ function generateAccessToken(user) {
 
 // Генерация refresh токена
 function generateRefreshToken(user) {
-  return jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '6mo' }) // 6 месяцев
+  return jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '180d' }) // 6 месяцев
 }
 
 // Проверка валидности refresh токена в базе данных

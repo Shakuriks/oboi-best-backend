@@ -1,0 +1,499 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Documentation",
+    "version": "1.0.0",
+    "description": "API Documentation for the project with PostgreSQL database schemas."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000",
+      "description": "Local server"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "description": "Create a new user with phone number, password, name, and role",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Registration error"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login user",
+        "description": "Authenticate a user and return access and refresh tokens",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokens"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Login error"
+          }
+        }
+      }
+    },
+    "/auth/token": {
+      "post": {
+        "summary": "Refresh access token",
+        "description": "Refresh the access token using a valid refresh token",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokens"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Error refreshing token"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Logout user",
+        "description": "Invalidate the user's refresh token",
+        "tags": ["Auth"],
+        "responses": {
+          "200": {
+            "description": "User logged out successfully"
+          },
+          "500": {
+            "description": "Logout error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserInput": {
+        "type": "object",
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "description": "Phone number of the user"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password of the user"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the user"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["user", "manager", "admin"],
+            "description": "Role of the user"
+          }
+        }
+      },
+      "LoginInput": {
+        "type": "object",
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "description": "Phone number of the user"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password of the user"
+          }
+        }
+      },
+      "AuthTokens": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Access token for authentication"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh token for authentication"
+          }
+        }
+      },
+      "RefreshTokenInput": {
+        "type": "object",
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "description": "Refresh token to be used for generating a new access token"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "users_id": {
+            "type": "integer",
+            "description": "ID of the user"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "Phone number of the user"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the user"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["user", "manager", "admin"],
+            "description": "Role of the user"
+          }
+        }
+      },
+      "Supplier": {
+        "type": "object",
+        "properties": {
+          "suppliers_id": {
+            "type": "integer",
+            "description": "ID of the supplier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the supplier"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email of the supplier"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the supplier"
+          }
+        }
+      },
+      "WallpaperType": {
+        "type": "object",
+        "properties": {
+          "wallpaper_types_id": {
+            "type": "integer",
+            "description": "ID of the wallpaper type"
+          },
+          "article": {
+            "type": "string",
+            "description": "Article number of the wallpaper type"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the wallpaper type"
+          },
+          "supplier_id": {
+            "type": "integer",
+            "description": "ID of the supplier"
+          },
+          "base_material": {
+            "type": "string",
+            "description": "Base material of the wallpaper"
+          },
+          "embossing": {
+            "type": "string",
+            "description": "Embossing of the wallpaper"
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "Manufacturer of the wallpaper"
+          },
+          "image_url": {
+            "type": "string",
+            "description": "URL of the wallpaper image"
+          },
+          "image_3d_url": {
+            "type": "string",
+            "description": "URL of the 3D wallpaper image"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["1.06", "0.53"],
+            "description": "Type of the wallpaper"
+          }
+        }
+      },
+      "Wallpaper": {
+        "type": "object",
+        "properties": {
+          "wallpapers_id": {
+            "type": "integer",
+            "description": "ID of the wallpaper"
+          },
+          "batch": {
+            "type": "string",
+            "description": "Batch of the wallpaper"
+          },
+          "wallpaper_type_id": {
+            "type": "integer",
+            "description": "ID of the wallpaper type"
+          },
+          "shelf": {
+            "type": "integer",
+            "description": "Shelf number where the wallpaper is stored"
+          },
+          "row": {
+            "type": "integer",
+            "description": "Row number where the wallpaper is stored"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Quantity of the wallpaper"
+          },
+          "price": {
+            "type": "integer",
+            "description": "Selling price of the wallpaper"
+          },
+          "cost_price": {
+            "type": "integer",
+            "description": "Cost price of the wallpaper"
+          },
+          "is_remaining": {
+            "type": "boolean",
+            "description": "Indicates if there is remaining stock"
+          }
+        }
+      },
+      "AdditionalProduct": {
+        "type": "object",
+        "properties": {
+          "additional_products_id": {
+            "type": "integer",
+            "description": "ID of the additional product"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the additional product"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Quantity of the additional product"
+          },
+          "cost_price": {
+            "type": "integer",
+            "description": "Cost price of the additional product"
+          },
+          "price": {
+            "type": "integer",
+            "description": "Selling price of the additional product"
+          }
+        }
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "transactions_id": {
+            "type": "integer",
+            "description": "ID of the transaction"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["purchase", "return", "defect", "supply"],
+            "description": "Type of the transaction"
+          },
+          "discount": {
+            "type": "integer",
+            "description": "Discount applied to the transaction"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp of the transaction"
+          }
+        }
+      },
+      "TransactionItem": {
+        "type": "object",
+        "properties": {
+          "transaction_items_id": {
+            "type": "integer",
+            "description": "ID of the transaction item"
+          },
+          "transaction_id": {
+            "type": "integer",
+            "description": "ID of the related transaction"
+          },
+          "item_table": {
+            "type": "string",
+            "enum": ["wallpapers", "additional_products"],
+            "description": "Table of the item in the transaction"
+          },
+          "item_id": {
+            "type": "integer",
+            "description": "ID of the related item"
+          },
+          "price": {
+            "type": "integer",
+            "description": "Selling price of the item"
+          },
+          "cost_price": {
+            "type": "integer",
+            "description": "Cost price of the item"
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "orders_id": {
+            "type": "integer",
+            "description": "ID of the order"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp of the order"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "Phone number associated with the order"
+          }
+        }
+      },
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "order_items_id": {
+            "type": "integer",
+            "description": "ID of the order item"
+          },
+          "order_id": {
+            "type": "integer",
+            "description": "ID of the related order"
+          },
+          "item_id": {
+            "type": "integer",
+            "description": "ID of the wallpaper type in the order"
+          }
+        }
+      },
+      "Reservation": {
+        "type": "object",
+        "properties": {
+          "reservations_id": {
+            "type": "integer",
+            "description": "ID of the reservation"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp of the reservation"
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "ID of the user who made the reservation"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "processed", "completed"],
+            "description": "Status of the reservation"
+          }
+        }
+      },
+      "ReservationItem": {
+        "type": "object",
+        "properties": {
+          "reservation_items_id": {
+            "type": "integer",
+            "description": "ID of the reservation item"
+          },
+          "reservation_id": {
+            "type": "integer",
+            "description": "ID of the related reservation"
+          },
+          "item_id": {
+            "type": "integer",
+            "description": "ID of the wallpaper related to the reservation"
+          }
+        }
+      },
+      "RefreshToken": {
+        "type": "object",
+        "properties": {
+          "token_id": {
+            "type": "integer",
+            "description": "ID of the refresh token"
+          },
+          "token": {
+            "type": "string",
+            "description": "Refresh token string"
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "ID of the user associated with the refresh token"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp of the refresh token"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,464 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Documentation",
+    "version": "1.0.0",
+    "description": "API for managing wallpapers, orders, users, and more"
+  },
+  "components": {
+    "securitySchemes": {
+      "userAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "adminAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "managerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Supplier": {
+        "type": "object",
+        "properties": {
+          "suppliers_id": { "type": "integer" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      },
+      "WallpaperType": {
+        "type": "object",
+        "properties": {
+          "wallpaper_types_id": { "type": "integer" },
+          "article": { "type": "string" },
+          "description": { "type": "string" },
+          "supplier_id": { "type": "integer" },
+          "base_material": { "type": "string" },
+          "embossing": { "type": "string" },
+          "manufacturer": { "type": "string" },
+          "image_url": { "type": "string" },
+          "image_3d_url": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["1.06", "0.53"]
+          },
+          "price_tag_printed": { "type": "boolean" }
+        }
+      },
+      "Wallpaper": {
+        "type": "object",
+        "properties": {
+          "wallpapers_id": { "type": "integer" },
+          "batch": { "type": "string" },
+          "wallpaper_type_id": { "type": "integer" },
+          "shelf": { "type": "integer" },
+          "row": { "type": "integer" },
+          "quantity": { "type": "integer" },
+          "price": { "type": "integer" },
+          "cost_price": { "type": "integer" },
+          "is_remaining": { "type": "boolean" }
+        }
+      },
+      "AdditionalProduct": {
+        "type": "object",
+        "properties": {
+          "additional_products_id": { "type": "integer" },
+          "name": { "type": "string" },
+          "quantity": { "type": "integer" },
+          "cost_price": { "type": "integer" },
+          "price": { "type": "integer" }
+        }
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "transactions_id": { "type": "integer" },
+          "type": {
+            "type": "string",
+            "enum": ["purchase", "return", "defect", "supply"]
+          },
+          "discount": { "type": "integer" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TransactionItem": {
+        "type": "object",
+        "properties": {
+          "transaction_items_id": { "type": "integer" },
+          "transaction_id": { "type": "integer" },
+          "item_table": {
+            "type": "string",
+            "enum": ["wallpapers", "additional_products"]
+          },
+          "item_id": { "type": "integer" },
+          "price": { "type": "integer" },
+          "cost_price": { "type": "integer" }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "orders_id": { "type": "integer" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "phone_number": { "type": "string" }
+        }
+      },
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "order_items_id": { "type": "integer" },
+          "order_id": { "type": "integer" },
+          "item_id": { "type": "integer" }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "users_id": { "type": "integer" },
+          "phone_number": { "type": "string" },
+          "password": { "type": "string" },
+          "name": { "type": "string" },
+          "role": {
+            "type": "string",
+            "enum": ["user", "manager", "admin"]
+          }
+        }
+      },
+      "Reservation": {
+        "type": "object",
+        "properties": {
+          "reservations_id": { "type": "integer" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "user_id": { "type": "integer" },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "processed", "completed"]
+          }
+        }
+      },
+      "ReservationItem": {
+        "type": "object",
+        "properties": {
+          "reservation_items_id": { "type": "integer" },
+          "reservation_id": { "type": "integer" },
+          "item_id": { "type": "integer" }
+        }
+      },
+      "RefreshToken": {
+        "type": "object",
+        "properties": {
+          "token_id": { "type": "integer" },
+          "token": { "type": "string" },
+          "user_id": { "type": "integer" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Tokens": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Access токен для аутентификации",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh токен для обновления access токена",
+            "example": "dXNlciI6eyJ1c2VySWQiOjEsIm5hbWUiOiJJdmFuIiwg..."
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["phone_number", "password"],
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "description": "Номер телефона для входа",
+            "example": "+375291234567"
+          },
+          "password": {
+            "type": "string",
+            "description": "Пароль пользователя",
+            "example": "password123"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["phone_number", "password", "name"],
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "description": "Номер телефона для регистрации",
+            "example": "+375291234567"
+          },
+          "password": {
+            "type": "string",
+            "description": "Пароль для учетной записи",
+            "example": "password123"
+          },
+          "name": {
+            "type": "string",
+            "description": "Имя пользователя",
+            "example": "Иван Иванов"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Сообщение об ошибке",
+            "example": "Ошибка при входе"
+          }
+        }
+      },
+      "RefreshTokenRequest": {
+        "type": "object",
+        "required": ["token"],
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Refresh токен",
+            "example": "dXNlciI6eyJ1c2VySWQiOjEsIm5hbWUiOiJJdmFuIiwg..."
+          }
+        }
+      },
+      "SendVerificationCodeRequest": {
+        "type": "object",
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "example": "+1234567890"
+          }
+        },
+        "required": ["phone_number"]
+      },
+      "SendVerificationCodeResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Код подтверждения отправлен."
+          }
+        }
+      },
+      "VerifyCodeRequest": {
+        "type": "object",
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "inputCode": {
+            "type": "string",
+            "example": "123456"
+          }
+        },
+        "required": ["phone_number", "inputCode"]
+      },
+      "VerifyCodeResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Код подтвержден."
+          }
+        }
+      },
+      "ErrorResponseVerify": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Неверный код."
+          }
+        }
+      },
+      "wallpapersTypesListBySuppliers": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "supplier_name": {
+              "type": "string"
+            },
+            "products": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "wallpaper_types_id": {
+                    "type": "integer"
+                  },
+                  "article": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "supplier_id": {
+                    "type": "integer"
+                  },
+                  "base_material": {
+                    "type": "string"
+                  },
+                  "embossing": {
+                    "type": "string"
+                  },
+                  "manufacturer": {
+                    "type": "string"
+                  },
+                  "image_url": {
+                    "type": "string"
+                  },
+                  "image_3d_url": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "price_tag_printed": {
+                    "type": "boolean"
+                  },
+                  "supplier_name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "wallpapersByType": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "wallpapers_id": {
+              "type": "integer"
+            },
+            "batch": {
+              "type": "string"
+            },
+            "shelf": {
+              "type": "string"
+            },
+            "row": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "is_remaining": {
+              "type": "boolean"
+            },
+            "total_reserved_quantity": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "wallpaperById": {
+        "type": "object",
+        "properties": {
+          "wallpapers_id": {
+            "type": "integer"
+          },
+          "batch": {
+            "type": "string"
+          },
+          "shelf": {
+            "type": "string"
+          },
+          "row": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "article": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "supplier_id": {
+            "type": "integer"
+          },
+          "base_material": {
+            "type": "string"
+          },
+          "embossing": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "image_3d_url": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "updateWallpaperRequest": {
+        "type": "object",
+        "properties": {
+          "batch": {
+            "type": "string"
+          },
+          "shelf": {
+            "type": "string"
+          },
+          "row": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "article": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "supplier_id": {
+            "type": "integer"
+          },
+          "base_material": {
+            "type": "string"
+          },
+          "embossing": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "image_3d_url": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
