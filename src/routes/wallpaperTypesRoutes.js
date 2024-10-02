@@ -497,4 +497,97 @@ router.put(
   }
 )
 
+/**
+ * @swagger
+ * /wallpapers/{wallpaper_id}/toggle-remaining:
+ *   patch:
+ *     summary: Изменение статуса Остаток товара
+ *     tags: [Wallpapers]
+ *     security:
+ *       - adminAuth: []
+ *       - managerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: wallpaper_id
+ *         required: true
+ *         description: ID товара
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Статус Остаток товара успешно изменен
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Статус Остаток товара успешно изменен
+ *                 is_remaining:
+ *                   type: boolean
+ *                   example: true
+ *       404:
+ *         description: Товар не найден
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Товар не найден
+ *       500:
+ *         description: Ошибка при изменении статуса Остаток товара
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Ошибка при изменении статуса Остаток товара
+ */
+
+router.patch(
+  '/:wallpaper_id/toggle-remaining',
+  authenticateAndAuthorize('admin', 'manager'),
+  async (req, res) => {
+    const { wallpaper_id } = req.params
+
+    try {
+      // Получаем текущие данные о наличии товара из базы данных
+      const result = await client.query(
+        'SELECT is_remaining FROM wallpapers WHERE wallpapers_id = $1',
+        [wallpaper_id]
+      )
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({ message: 'Товар не найден' })
+      }
+
+      const { is_remaining } = result.rows[0]
+
+      // Меняем значение на противоположное
+      const newIsRemaining = !is_remaining
+
+      // Обновляем значение в базе данных
+      await client.query(
+        'UPDATE wallpapers SET is_remaining = $1 WHERE wallpapers_id = $2',
+        [newIsRemaining, wallpaper_id]
+      )
+
+      res.status(200).json({
+        message: 'Статус Остаток товара успешно изменен',
+        is_remaining: newIsRemaining,
+      })
+    } catch (error) {
+      console.error('Ошибка при изменении статуса товара:', error)
+      res
+        .status(500)
+        .json({ message: 'Ошибка при изменении статуса Остаток товара' })
+    }
+  }
+)
+
 module.exports = router
