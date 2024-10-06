@@ -145,6 +145,46 @@ async function runMigrations() {
       );
     `)
 
+    // Добавление поля price_tag_printed в таблицу wallpaper_types, если его нет
+    await client.query(`
+    DO $$ 
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'wallpaper_types' AND column_name = 'price_tag_printed') THEN
+        ALTER TABLE wallpaper_types ADD COLUMN price_tag_printed BOOLEAN DEFAULT false;
+      END IF;
+    END $$;
+  `)
+
+    // Добавление поля quantity в таблицу reservation_items, если его нет
+    await client.query(`
+    DO $$ 
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reservation_items' AND column_name = 'quantity') THEN
+        ALTER TABLE reservation_items ADD COLUMN quantity INT NOT NULL DEFAULT 1;
+      END IF;
+    END $$;
+  `)
+
+    // Добавление поля quantity в таблицу order_items, если его нет
+    await client.query(`
+    DO $$ 
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'order_items' AND column_name = 'quantity') THEN
+        ALTER TABLE order_items ADD COLUMN quantity INT NOT NULL DEFAULT 1;
+      END IF;
+    END $$;
+  `)
+
+    // Добавление поля quantity в таблицу transaction_items, если его нет
+    await client.query(`
+    DO $$ 
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'transaction_items' AND column_name = 'quantity') THEN
+        ALTER TABLE transaction_items ADD COLUMN quantity INT NOT NULL DEFAULT 1;
+      END IF;
+    END $$;
+  `)
+
     console.log('Миграции выполнены успешно!')
   } catch (err) {
     console.error('Ошибка выполнения миграции:', err)

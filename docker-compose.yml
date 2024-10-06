@@ -1,17 +1,28 @@
-version: '3.8'
+version: '3.8' # Версия Docker Compose
 
 services:
-  db:
-    image: postgres:16
-    restart: always
-    environment:
-      POSTGRES_DB: oboi_best
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+  redis:
+    image: redis:latest # Официальный образ Redis
+    container_name: redis-server # Имя контейнера Redis
     ports:
-      - '5434:5432' # Пробрасываем порт 5432 контейнера на порт 5434 хоста
+      - '6379:6379' # Проброс порта Redis
     volumes:
-      - postgres_data:/var/lib/postgresql/data # Монтирование тома для сохранения данных
+      - redis_data:/data # Том для хранения данных Redis
+    command: ['redis-server', '--appendonly', 'yes'] # Включение долговременного хранения данных
+    restart: always # Автоматический перезапуск при сбое
+
+  db:
+    image: postgres:16 # Официальный образ PostgreSQL
+    restart: always # Автоматический перезапуск при сбое
+    environment:
+      POSTGRES_DB: oboi_best # Название БД
+      POSTGRES_USER: postgres # Пользователь
+      POSTGRES_PASSWORD: postgres # Пароль
+    ports:
+      - '5434:5432' # Проброс порта 5432 контейнера на порт 5434 хоста
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Монтирование тома для данных PostgreSQL
 
 volumes:
-  postgres_data:
+  redis_data: # Том для Redis
+  postgres_data: # Том для PostgreSQL
