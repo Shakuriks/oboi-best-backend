@@ -1,5 +1,6 @@
 const express = require('express')
 require('dotenv').config()
+const cors = require('cors') // Импортируем пакет cors
 const { client } = require('./services/dbService')
 const authRoutes = require('./routes/authRoutes')
 const suppliersRoutes = require('./routes/suppliersRoutes')
@@ -12,6 +13,15 @@ const additionalProductsRoutes = require('./routes/additionalProductsRoutes')
 
 const app = express()
 app.use(express.json())
+
+// Настраиваем CORS
+app.use(
+  cors({
+    origin: 'http://localhost:5173', // Укажите ваш фронтенд URL
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  })
+)
 
 // Конфигурация swagger-jsdoc для описания эндпоинтов
 const swaggerOptions = {
