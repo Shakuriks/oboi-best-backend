@@ -1,44 +1,63 @@
 const express = require('express')
-const { client } = require('../services/dbService')
+const { pool } = require('../services/dbService')
 const router = express.Router()
 
 /**
  * @swagger
- * /auth/register:
- *   post:
- *     summary: Регистрация нового пользователя
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/RegisterRequest'
+ * /additional-products:
+ *   get:
+ *     summary: Получить все дополнительные товары
  *     responses:
- *       201:
- *         description: Успешная регистрация
+ *       200:
+ *         description: Успешное получение списка дополнительных товаров
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/User'
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/AdditionalProduct'
  *       500:
- *         description: Ошибка регистрации
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         description: Ошибка получения данных
  */ router.get('/', async (req, res) => {
+  const client = await pool.connect()
   try {
     const result = await client.query('SELECT * FROM additional_products')
     res.status(200).json(result.rows)
   } catch (error) {
     console.error('Ошибка получения данных:', error)
     res.status(500).json({ message: 'Ошибка получения данных.' })
+  } finally {
+    client.release()
   }
 })
 
-// Эндпоинт для получения данных конкретной строки по id
+/**
+ * @swagger
+ * /additional-products/{additional_products_id}:
+ *   get:
+ *     summary: Получить дополнительный товар по ID
+ *     parameters:
+ *       - in: path
+ *         name: additional_products_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID дополнительного товара
+ *     responses:
+ *       200:
+ *         description: Успешное получение дополнительного товара
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AdditionalProduct'
+ *       404:
+ *         description: Товар не найден
+ *       500:
+ *         description: Ошибка получения данных
+ */
 router.get('/:additional_products_id', async (req, res) => {
   const { additional_products_id } = req.params
+  const client = await pool.connect()
   try {
     const result = await client.query(
       'SELECT * FROM additional_products WHERE additional_products_id = $1',
@@ -51,13 +70,50 @@ router.get('/:additional_products_id', async (req, res) => {
   } catch (error) {
     console.error('Ошибка получения данных:', error)
     res.status(500).json({ message: 'Ошибка получения данных.' })
+  } finally {
+    client.release()
   }
 })
 
-// Эндпоинт для изменения дополнительного товара (только name и price)
+/**
+ * @swagger
+ * /additional-products/{additional_products_id}:
+ *   put:
+ *     summary: Обновить дополнительный товар
+ *     parameters:
+ *       - in: path
+ *         name: additional_products_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID дополнительного товара
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *             required:
+ *               - name
+ *               - price
+ *     responses:
+ *       200:
+ *         description: Товар успешно обновлен
+ *       404:
+ *         description: Товар не найден
+ *       500:
+ *         description: Ошибка обновления товара
+ */
 router.put('/:additional_products_id', async (req, res) => {
   const { additional_products_id } = req.params
   const { name, price } = req.body
+  const client = await pool.connect()
+
   try {
     const result = await client.query(
       `UPDATE additional_products 
@@ -74,12 +130,36 @@ router.put('/:additional_products_id', async (req, res) => {
   } catch (error) {
     console.error('Ошибка обновления товара:', error)
     res.status(500).json({ message: 'Ошибка обновления товара.' })
+  } finally {
+    client.release()
   }
 })
 
-// Эндпоинт для удаления дополнительного товара (только если quantity = 0)
-router.delete('/:additional_products_id', async (req, res) => {
+/**
+ * @swagger
+ * /additional-products/{additional_products_id}:
+ *   delete:
+ *     summary: Удалить дополнительный товар
+ *     parameters:
+ *       - in: path
+ *         name: additional_products_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID дополнительного товара
+ *     responses:
+ *       200:
+ *         description: Товар успешно удален
+ *       400:
+ *         description: Нельзя удалить товар, у которого количество больше 0
+ *       404:
+ *         description: Товар не найден
+ *       500:
+ *         description: Ошибка удаления товара
+ */ router.delete('/:additional_products_id', async (req, res) => {
   const { additional_products_id } = req.params
+  const client = await pool.connect()
+
   try {
     // Проверяем количество товара
     const checkQuantityResult = await client.query(
@@ -109,6 +189,8 @@ router.delete('/:additional_products_id', async (req, res) => {
   } catch (error) {
     console.error('Ошибка удаления товара:', error)
     res.status(500).json({ message: 'Ошибка удаления товара.' })
+  } finally {
+    client.release()
   }
 })
 

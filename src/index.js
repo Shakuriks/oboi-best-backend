@@ -10,6 +10,7 @@ const swaggerJsdoc = require('swagger-jsdoc')
 const swaggerConfig = require('../swaggerConfig') // Подключаем конфигурацию Swagger
 const verificationRoutes = require('./routes/verificationCodeRoutes') // Путь к вашему файлу маршрутов
 const additionalProductsRoutes = require('./routes/additionalProductsRoutes')
+const transactionsRoutes = require('./routes/transactionsRoutes')
 
 const app = express()
 app.use(express.json())
@@ -44,6 +45,7 @@ app.use('/wallpaper-types', wallpaperTypesRoutes) // Эндпоинт для wal
 app.use('/verification', verificationRoutes)
 app.use('/suppliers', suppliersRoutes)
 app.use('/additional-products', additionalProductsRoutes)
+app.use('/transactions', transactionsRoutes)
 
 // Запуск сервера
 const PORT = process.env.PORT || 4000

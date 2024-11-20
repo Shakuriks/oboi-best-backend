@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const client = require('./dbService') // Путь к вашему сервису базы данных
+const { pool } = require('./dbService') // Путь к вашему сервису базы данных
 
 // Генерация access токена
 function generateAccessToken(user) {
@@ -13,24 +13,30 @@ function generateRefreshToken(user) {
 
 // Проверка валидности refresh токена в базе данных
 async function verifyRefreshToken(token) {
+  const client = await pool.connect()
   const result = await client.query(
     'SELECT * FROM refresh_tokens WHERE token = $1',
     [token]
   )
+  client.release()
   return result.rowCount > 0 // Возвращает true, если токен существует в базе данных
 }
 
 // Удаление refresh токена из базы данных
 async function removeRefreshToken(token) {
+  const client = await pool.connect()
   await client.query('DELETE FROM refresh_tokens WHERE token = $1', [token])
+  client.release()
 }
 
 // Сохранение нового refresh токена в базе данных
 async function saveRefreshToken(token, userId) {
+  const client = await pool.connect()
   await client.query(
     'INSERT INTO refresh_tokens (token, user_id) VALUES ($1, $2)',
     [token, userId]
   )
+  client.release()
 }
 
 // Экспорт функций

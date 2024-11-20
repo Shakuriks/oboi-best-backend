@@ -19,8 +19,62 @@ async function generateInvoice(items, discount) {
   const page = pdfDoc.addPage([600, 400])
   const fontSize = 12
 
+  page.drawText('ИП Легоньков В.В. УНП 291358748', {
+    x: 50,
+    y: 370,
+    size: fontSize,
+    font: customFont,
+  })
+
   // Заголовок документа
-  page.drawText('Товарный чек', { x: 230, y: 350, size: 20, font: customFont })
+  page.drawText('Товарный чек', { x: 230, y: 335, size: 20, font: customFont })
+
+  page.drawText('«', {
+    x: 50,
+    y: 300,
+    size: fontSize,
+    font: customFont,
+  })
+
+  page.drawLine({
+    start: { x: 56, y: 299 },
+    end: { x: 69, y: 299 },
+    thickness: 1,
+    color: rgb(0, 0, 0),
+  })
+
+  page.drawText('»', {
+    x: 68,
+    y: 300,
+    size: fontSize,
+    font: customFont,
+  })
+
+  page.drawLine({
+    start: { x: 73, y: 299 },
+    end: { x: 140, y: 299 },
+    thickness: 1,
+    color: rgb(0, 0, 0),
+  })
+
+  page.drawText('20', {
+    x: 141,
+    y: 300,
+    size: fontSize,
+    font: customFont,
+  })
+  page.drawLine({
+    start: { x: 153, y: 299 },
+    end: { x: 170, y: 299 },
+    thickness: 1,
+    color: rgb(0, 0, 0),
+  })
+  page.drawText('г.', {
+    x: 170,
+    y: 300,
+    size: fontSize,
+    font: customFont,
+  })
 
   // Заголовки таблицы
   page.drawText('Наименование товара', {
@@ -153,10 +207,23 @@ async function generateInvoice(items, discount) {
     font: customFont,
   })
 
-  // Горизонтальная линия под заголовком таблицы
   page.drawLine({
     start: { x: 85, y: yPosition - 22 },
     end: { x: 550, y: yPosition - 22 },
+    thickness: 1,
+    color: rgb(0, 0, 0),
+  })
+
+  page.drawText('Отпуск произвел: Легоньков В.В.', {
+    x: 330,
+    y: yPosition - 60,
+    size: fontSize,
+    font: customFont,
+  })
+
+  page.drawLine({
+    start: { x: 430, y: yPosition - 62 },
+    end: { x: 550, y: yPosition - 62 },
     thickness: 1,
     color: rgb(0, 0, 0),
   })

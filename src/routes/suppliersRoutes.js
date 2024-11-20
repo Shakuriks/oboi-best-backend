@@ -1,5 +1,5 @@
 const express = require('express')
-const { client } = require('../services/dbService') // Подключение к базе данных
+const { pool } = require('../services/dbService') // Подключение к базе данных
 const { authenticateAndAuthorize } = require('../middlewares/authMiddleware')
 
 const router = express.Router()
@@ -37,12 +37,15 @@ router.get(
   '/',
   authenticateAndAuthorize('admin', 'manager'),
   async (req, res) => {
+    const client = await pool.connect()
     try {
       const result = await client.query('SELECT * FROM suppliers')
       res.status(200).json(result.rows)
     } catch (error) {
       console.error('Ошибка при получении поставщиков:', error)
       res.status(500).json({ message: 'Ошибка при получении поставщиков' })
+    } finally {
+      client.release()
     }
   }
 )
@@ -96,6 +99,7 @@ router.get(
   authenticateAndAuthorize('admin', 'manager'),
   async (req, res) => {
     const { supplier_id } = req.params
+    const client = await pool.connect()
 
     try {
       const result = await client.query(
@@ -111,6 +115,8 @@ router.get(
     } catch (error) {
       console.error('Ошибка при получении поставщика:', error)
       res.status(500).json({ message: 'Ошибка при получении поставщика' })
+    } finally {
+      client.release()
     }
   }
 )
@@ -167,6 +173,7 @@ router.get(
   authenticateAndAuthorize('admin', 'manager'),
   async (req, res) => {
     const { name } = req.params
+    const client = await pool.connect()
 
     try {
       const result = await client.query(
@@ -182,6 +189,8 @@ router.get(
     } catch (error) {
       console.error('Ошибка при получении ID поставщика по имени:', error)
       res.status(500).json({ message: 'Ошибка при получении ID поставщика' })
+    } finally {
+      client.release()
     }
   }
 )
