@@ -461,6 +461,58 @@ router.post(
   }
 )
 
+/**
+ * @swagger
+ * /transactions/defect:
+ *   post:
+ *     summary: Запись дефекта
+ *     description: Эндпоинт для записи дефекта товаров. Принимает массив товаров (обоев или дополнительных товаров) и уменьшает их количество на складе. Создает транзакцию с типом "defect" и записывает изменения в таблицу transaction_items.
+ *     tags:
+ *       - Transactions
+ *     security:
+ *       - adminAuth: []
+ *       - managerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/defectRequest'
+ *     responses:
+ *       200:
+ *         description: Дефект успешно записан.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Дефект успешно записан.
+ *       400:
+ *         description: Ошибка валидации данных
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Необходимо передать массив товаров.
+ *       500:
+ *         description: Ошибка записи дефекта
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Ошибка записи дефекта.
+ *                 error:
+ *                   type: string
+ *                   example: Обои с артиклем 123ABC и партией Batch01 не найдены.
+ */
 router.post(
   '/defect',
   authenticateAndAuthorize('admin', 'manager'),
