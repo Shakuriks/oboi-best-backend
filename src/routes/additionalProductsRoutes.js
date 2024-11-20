@@ -7,6 +7,8 @@ const router = express.Router()
  * /additional-products:
  *   get:
  *     summary: Получить все дополнительные товары
+ *     tags:
+ *       - Additional Products
  *     responses:
  *       200:
  *         description: Успешное получение списка дополнительных товаров
@@ -36,6 +38,8 @@ const router = express.Router()
  * /additional-products/{additional_products_id}:
  *   get:
  *     summary: Получить дополнительный товар по ID
+ *     tags:
+ *       - Additional Products
  *     parameters:
  *       - in: path
  *         name: additional_products_id
@@ -80,6 +84,8 @@ router.get('/:additional_products_id', async (req, res) => {
  * /additional-products/{additional_products_id}:
  *   put:
  *     summary: Обновить дополнительный товар
+ *     tags:
+ *       - Additional Products
  *     parameters:
  *       - in: path
  *         name: additional_products_id
@@ -140,6 +146,8 @@ router.put('/:additional_products_id', async (req, res) => {
  * /additional-products/{additional_products_id}:
  *   delete:
  *     summary: Удалить дополнительный товар
+ *     tags:
+ *       - Additional Products
  *     parameters:
  *       - in: path
  *         name: additional_products_id

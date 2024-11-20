@@ -206,6 +206,26 @@ async function runMigrations() {
     END $$;
   `)
 
+    await client.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'wallpapers' AND column_name = 'created_at') THEN
+        ALTER TABLE wallpapers ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL;
+      END IF;
+    END
+    $$;
+  `)
+
+    await client.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'additional_products' AND column_name = 'created_at') THEN
+        ALTER TABLE additional_products ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL;
+      END IF;
+    END
+    $$;
+  `)
+
     console.log('Миграции выполнены успешно!')
   } catch (err) {
     console.error('Ошибка выполнения миграции:', err)
