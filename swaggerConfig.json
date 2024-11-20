@@ -533,6 +533,75 @@
         },
         "required": ["items"],
         "description": "Запрос на запись покупки"
+      },
+      "returnRequest": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["wallpaper", "additional_product"],
+                  "description": "Тип товара ('wallpaper' для обоев, 'additional_product' для дополнительных товаров)"
+                },
+                "article": {
+                  "type": "string",
+                  "description": "Артикул обоев (обязательно для type = 'wallpaper')",
+                  "example": "123ABC"
+                },
+                "batch": {
+                  "type": "string",
+                  "description": "Партия обоев (обязательно для type = 'wallpaper')",
+                  "example": "Batch01"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Название дополнительного товара (обязательно для type = 'additional_product')",
+                  "example": "Клей для обоев"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "description": "Количество возвращаемого товара",
+                  "minimum": 1,
+                  "example": 5
+                }
+              },
+              "required": ["type", "quantity"],
+              "oneOf": [
+                {
+                  "required": ["article", "batch"]
+                },
+                {
+                  "required": ["name"]
+                }
+              ]
+            },
+            "description": "Список товаров для возврата",
+            "example": [
+              {
+                "type": "wallpaper",
+                "article": "123ABC",
+                "batch": "Batch01",
+                "quantity": 5
+              },
+              {
+                "type": "additional_product",
+                "name": "Клей для обоев",
+                "quantity": 2
+              }
+            ]
+          },
+          "totalPrice": {
+            "type": "number",
+            "description": "Общая сумма возврата",
+            "example": 500
+          }
+        },
+        "required": ["items", "totalPrice"],
+        "description": "Запрос на запись возврата товаров"
       }
     }
   }

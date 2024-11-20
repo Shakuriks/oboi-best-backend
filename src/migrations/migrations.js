@@ -185,6 +185,27 @@ async function runMigrations() {
     END $$;
   `)
 
+    await client.query(`
+    DO $$ 
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'transaction_items' AND column_name = 'price' AND data_type = 'double precision') THEN
+        ALTER TABLE transaction_items
+        ALTER COLUMN price TYPE FLOAT USING price::FLOAT;
+      END IF;
+    END $$;
+  `)
+
+    // Проверка и добавление столбца created_at в таблицу wallpaper_types
+    await client.query(`
+    DO $$ 
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'wallpaper_types' AND column_name = 'created_at') THEN
+        ALTER TABLE wallpaper_types
+        ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL;
+      END IF;
+    END $$;
+  `)
+
     console.log('Миграции выполнены успешно!')
   } catch (err) {
     console.error('Ошибка выполнения миграции:', err)
