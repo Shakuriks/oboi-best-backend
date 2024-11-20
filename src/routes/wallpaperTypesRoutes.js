@@ -1,5 +1,5 @@
 const express = require('express')
-const { client } = require('../services/dbService')
+const { pool } = require('../services/dbService')
 const { authenticateAndAuthorize } = require('../middlewares/authMiddleware')
 
 const router = express.Router()
@@ -35,6 +35,7 @@ router.get(
   '/',
   authenticateAndAuthorize('admin', 'manager'),
   async (req, res) => {
+    const client = await pool.connect()
     try {
       const result = await client.query(`
         SELECT wt.*, s.name AS supplier_name
@@ -64,6 +65,8 @@ router.get(
     } catch (error) {
       console.error('Ошибка получения записей:', error)
       res.status(500).json({ message: 'Ошибка получения записей' })
+    } finally {
+      client.release()
     }
   }
 )
@@ -117,6 +120,7 @@ router.get(
   authenticateAndAuthorize('admin', 'manager'),
   async (req, res) => {
     const { wallpaper_types_id } = req.params // Извлекаем wallpaper_types_id из параметров
+    const client = await pool.connect()
 
     try {
       // Получаем все записи из wallpapers по wallpaper_types_id и подсчитываем общее количество в активных бронированиях
@@ -138,6 +142,8 @@ router.get(
     } catch (error) {
       console.error('Ошибка получения записей:', error)
       res.status(500).json({ message: 'Ошибка получения записей' })
+    } finally {
+      client.release()
     }
   }
 )
@@ -191,6 +197,7 @@ router.get(
   authenticateAndAuthorize('admin', 'manager'),
   async (req, res) => {
     const { wallpaper_id } = req.params
+    const client = await pool.connect()
 
     try {
       // Выполняем запрос для получения данных товара и его типа
@@ -215,6 +222,8 @@ router.get(
     } catch (error) {
       console.error('Ошибка получения данных о товаре:', error)
       res.status(500).json({ message: 'Ошибка получения данных о товаре' })
+    } finally {
+      client.release()
     }
   }
 )
@@ -282,6 +291,7 @@ router.delete(
   authenticateAndAuthorize('admin', 'manager'),
   async (req, res) => {
     const { wallpaper_id } = req.params
+    const client = await pool.connect()
 
     try {
       // Получаем информацию о товаре, включая wallpaper_type_id и quantity
@@ -344,6 +354,8 @@ router.delete(
     } catch (error) {
       console.error('Ошибка при удалении товара:', error)
       res.status(500).json({ message: 'Ошибка при удалении товара' })
+    } finally {
+      client.release()
     }
   }
 )
@@ -422,6 +434,7 @@ router.put(
       image_3d_url,
       type,
     } = req.body
+    const client = await pool.connect()
 
     try {
       // Получаем текущие данные товара из базы данных
@@ -493,6 +506,8 @@ router.put(
     } catch (error) {
       console.error('Ошибка обновления товара и типа:', error)
       res.status(500).json({ message: 'Ошибка обновления товара и типа' })
+    } finally {
+      client.release()
     }
   }
 )
@@ -554,6 +569,7 @@ router.patch(
   authenticateAndAuthorize('admin', 'manager'),
   async (req, res) => {
     const { wallpaper_id } = req.params
+    const client = await pool.connect()
 
     try {
       // Получаем текущие данные о наличии товара из базы данных
@@ -586,6 +602,8 @@ router.patch(
       res
         .status(500)
         .json({ message: 'Ошибка при изменении статуса Остаток товара' })
+    } finally {
+      client.release()
     }
   }
 )

@@ -7,7 +7,7 @@ const {
   removeRefreshToken,
   saveRefreshToken,
 } = require('../services/tokenService')
-const { client } = require('../services/dbService')
+const { pool } = require('../services/dbService')
 
 const router = express.Router()
 
@@ -44,6 +44,7 @@ const router = express.Router()
 router.post('/register', async (req, res) => {
   const { phone_number, password, name } = req.body
   const hashedPassword = await bcrypt.hash(password, 10)
+  const client = await pool.connect()
 
   try {
     const result = await client.query(
@@ -56,6 +57,8 @@ router.post('/register', async (req, res) => {
   } catch (err) {
     console.error(err)
     res.status(500).send('Ошибка регистрации')
+  } finally {
+    client.release()
   }
 })
 
@@ -101,6 +104,7 @@ router.post('/register', async (req, res) => {
  */
 router.post('/login', async (req, res) => {
   const { phone_number, password } = req.body
+  const client = await pool.connect()
 
   try {
     const result = await client.query(
@@ -139,6 +143,8 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error(err)
     res.status(500).send('Ошибка при входе')
+  } finally {
+    client.release()
   }
 })
 
@@ -194,6 +200,7 @@ router.post('/login', async (req, res) => {
  */
 router.post('/token', async (req, res) => {
   const { token } = req.body
+
   if (!token) return res.sendStatus(401) // Не авторизован
 
   // Проверка на валидность токена в базе данных
@@ -256,7 +263,7 @@ router.post('/token', async (req, res) => {
  */
 router.delete('/logout', async (req, res) => {
   const { token } = req.body
-  await revokeRefreshToken(token)
+  await removeRefreshToken(token)
   res.sendStatus(204)
 })
 
