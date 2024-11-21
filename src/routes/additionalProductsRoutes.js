@@ -1,6 +1,7 @@
 const express = require('express')
 const { pool } = require('../services/dbService')
 const router = express.Router()
+const { authenticateAndAuthorize } = require('../middlewares/authMiddleware')
 
 /**
  * @swagger
@@ -23,18 +24,22 @@ const router = express.Router()
  *                 $ref: '#/components/schemas/AdditionalProduct'
  *       500:
  *         description: Ошибка получения данных
- */ router.get('/', async (req, res) => {
-  const client = await pool.connect()
-  try {
-    const result = await client.query('SELECT * FROM additional_products')
-    res.status(200).json(result.rows)
-  } catch (error) {
-    console.error('Ошибка получения данных:', error)
-    res.status(500).json({ message: 'Ошибка получения данных.' })
-  } finally {
-    client.release()
+ */ router.get(
+  '/',
+  authenticateAndAuthorize('admin', 'manager'),
+  async (req, res) => {
+    const client = await pool.connect()
+    try {
+      const result = await client.query('SELECT * FROM additional_products')
+      res.status(200).json(result.rows)
+    } catch (error) {
+      console.error('Ошибка получения данных:', error)
+      res.status(500).json({ message: 'Ошибка получения данных.' })
+    } finally {
+      client.release()
+    }
   }
-})
+)
 
 /**
  * @swagger
@@ -65,25 +70,29 @@ const router = express.Router()
  *       500:
  *         description: Ошибка получения данных
  */
-router.get('/:additional_products_id', async (req, res) => {
-  const { additional_products_id } = req.params
-  const client = await pool.connect()
-  try {
-    const result = await client.query(
-      'SELECT * FROM additional_products WHERE additional_products_id = $1',
-      [additional_products_id]
-    )
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Товар не найден' })
+router.get(
+  '/:additional_products_id',
+  authenticateAndAuthorize('admin', 'manager'),
+  async (req, res) => {
+    const { additional_products_id } = req.params
+    const client = await pool.connect()
+    try {
+      const result = await client.query(
+        'SELECT * FROM additional_products WHERE additional_products_id = $1',
+        [additional_products_id]
+      )
+      if (result.rowCount === 0) {
+        return res.status(404).json({ message: 'Товар не найден' })
+      }
+      res.status(200).json(result.rows[0])
+    } catch (error) {
+      console.error('Ошибка получения данных:', error)
+      res.status(500).json({ message: 'Ошибка получения данных.' })
+    } finally {
+      client.release()
     }
-    res.status(200).json(result.rows[0])
-  } catch (error) {
-    console.error('Ошибка получения данных:', error)
-    res.status(500).json({ message: 'Ошибка получения данных.' })
-  } finally {
-    client.release()
   }
-})
+)
 
 /**
  * @swagger
@@ -124,31 +133,35 @@ router.get('/:additional_products_id', async (req, res) => {
  *       500:
  *         description: Ошибка обновления товара
  */
-router.put('/:additional_products_id', async (req, res) => {
-  const { additional_products_id } = req.params
-  const { name, price } = req.body
-  const client = await pool.connect()
+router.put(
+  '/:additional_products_id',
+  authenticateAndAuthorize('admin', 'manager'),
+  async (req, res) => {
+    const { additional_products_id } = req.params
+    const { name, price } = req.body
+    const client = await pool.connect()
 
-  try {
-    const result = await client.query(
-      `UPDATE additional_products 
+    try {
+      const result = await client.query(
+        `UPDATE additional_products 
        SET name = $1, price = $2
        WHERE additional_products_id = $3`,
-      [name, price, additional_products_id]
-    )
+        [name, price, additional_products_id]
+      )
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Товар не найден' })
+      if (result.rowCount === 0) {
+        return res.status(404).json({ message: 'Товар не найден' })
+      }
+
+      res.status(200).json({ message: 'Товар успешно обновлен' })
+    } catch (error) {
+      console.error('Ошибка обновления товара:', error)
+      res.status(500).json({ message: 'Ошибка обновления товара.' })
+    } finally {
+      client.release()
     }
-
-    res.status(200).json({ message: 'Товар успешно обновлен' })
-  } catch (error) {
-    console.error('Ошибка обновления товара:', error)
-    res.status(500).json({ message: 'Ошибка обновления товара.' })
-  } finally {
-    client.release()
   }
-})
+)
 
 /**
  * @swagger
@@ -176,42 +189,46 @@ router.put('/:additional_products_id', async (req, res) => {
  *         description: Товар не найден
  *       500:
  *         description: Ошибка удаления товара
- */ router.delete('/:additional_products_id', async (req, res) => {
-  const { additional_products_id } = req.params
-  const client = await pool.connect()
+ */ router.delete(
+  '/:additional_products_id',
+  authenticateAndAuthorize('admin', 'manager'),
+  async (req, res) => {
+    const { additional_products_id } = req.params
+    const client = await pool.connect()
 
-  try {
-    // Проверяем количество товара
-    const checkQuantityResult = await client.query(
-      'SELECT quantity FROM additional_products WHERE additional_products_id = $1',
-      [additional_products_id]
-    )
+    try {
+      // Проверяем количество товара
+      const checkQuantityResult = await client.query(
+        'SELECT quantity FROM additional_products WHERE additional_products_id = $1',
+        [additional_products_id]
+      )
 
-    if (checkQuantityResult.rowCount === 0) {
-      return res.status(404).json({ message: 'Товар не найден' })
+      if (checkQuantityResult.rowCount === 0) {
+        return res.status(404).json({ message: 'Товар не найден' })
+      }
+
+      const quantity = checkQuantityResult.rows[0].quantity
+
+      if (quantity > 0) {
+        return res.status(400).json({
+          message: 'Нельзя удалить товар, у которого количество больше 0.',
+        })
+      }
+
+      // Если количество = 0, удаляем товар
+      const deleteResult = await client.query(
+        'DELETE FROM additional_products WHERE additional_products_id = $1',
+        [additional_products_id]
+      )
+
+      res.status(200).json({ message: 'Товар успешно удален' })
+    } catch (error) {
+      console.error('Ошибка удаления товара:', error)
+      res.status(500).json({ message: 'Ошибка удаления товара.' })
+    } finally {
+      client.release()
     }
-
-    const quantity = checkQuantityResult.rows[0].quantity
-
-    if (quantity > 0) {
-      return res.status(400).json({
-        message: 'Нельзя удалить товар, у которого количество больше 0.',
-      })
-    }
-
-    // Если количество = 0, удаляем товар
-    const deleteResult = await client.query(
-      'DELETE FROM additional_products WHERE additional_products_id = $1',
-      [additional_products_id]
-    )
-
-    res.status(200).json({ message: 'Товар успешно удален' })
-  } catch (error) {
-    console.error('Ошибка удаления товара:', error)
-    res.status(500).json({ message: 'Ошибка удаления товара.' })
-  } finally {
-    client.release()
   }
-})
+)
 
 module.exports = router
