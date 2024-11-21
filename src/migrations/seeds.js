@@ -16,9 +16,9 @@ async function runSeeds() {
     // Сид для таблицы suppliers
     await client.query(`
       INSERT INTO suppliers (name, email, description) VALUES
-      ('Supplier 1', 'supplier1@example.com', 'Description for Supplier 1'),
-      ('Supplier 2', 'supplier2@example.com', 'Description for Supplier 2'),
-      ('Supplier 3', 'supplier3@example.com', 'Description for Supplier 3')
+      ('БелКонТорг', 'belcontorg@gmail.com', 'Мы должны 1200'),
+      ('ПКД', 'pkd@mail.ru', 'Нам должны 500'),
+      ('ПКТ', 'pkt@yandex.ru', 'Поставка в субботу')
       ON CONFLICT DO NOTHING;
     `)
 

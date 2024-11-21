@@ -9,6 +9,9 @@ const router = express.Router()
  *     summary: Получить все дополнительные товары
  *     tags:
  *       - Additional Products
+ *     security:
+ *       - adminAuth: []
+ *       - managerAuth: []
  *     responses:
  *       200:
  *         description: Успешное получение списка дополнительных товаров
@@ -40,6 +43,9 @@ const router = express.Router()
  *     summary: Получить дополнительный товар по ID
  *     tags:
  *       - Additional Products
+ *     security:
+ *       - adminAuth: []
+ *       - managerAuth: []
  *     parameters:
  *       - in: path
  *         name: additional_products_id
@@ -86,6 +92,9 @@ router.get('/:additional_products_id', async (req, res) => {
  *     summary: Обновить дополнительный товар
  *     tags:
  *       - Additional Products
+ *     security:
+ *       - adminAuth: []
+ *       - managerAuth: []
  *     parameters:
  *       - in: path
  *         name: additional_products_id
@@ -148,6 +157,9 @@ router.put('/:additional_products_id', async (req, res) => {
  *     summary: Удалить дополнительный товар
  *     tags:
  *       - Additional Products
+ *     security:
+ *       - adminAuth: []
+ *       - managerAuth: []
  *     parameters:
  *       - in: path
  *         name: additional_products_id

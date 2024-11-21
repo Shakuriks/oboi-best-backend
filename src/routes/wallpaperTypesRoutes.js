@@ -345,7 +345,7 @@ router.delete(
       // Если это был последний товар с таким wallpaper_type_id, удаляем и запись из wallpaper_types
       if (remainingCount === 0) {
         await client.query(
-          'DELETE FROM wallpaper_types WHERE wallpaper_type_id = $1',
+          'DELETE FROM wallpaper_types WHERE wallpaper_types_id = $1',
           [wallpaper_type_id]
         )
       }
@@ -514,7 +514,7 @@ router.put(
 
 /**
  * @swagger
- * /wallpapers/{wallpaper_id}/toggle-remaining:
+ * /wallpaper-types/{wallpaper_id}/toggle-remaining:
  *   patch:
  *     summary: Изменение статуса Остаток товара
  *     tags: [Wallpapers]
