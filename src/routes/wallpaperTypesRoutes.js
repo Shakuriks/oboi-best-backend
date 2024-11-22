@@ -41,7 +41,7 @@ router.get(
         SELECT wt.*, s.name AS supplier_name
         FROM wallpaper_types wt
         JOIN suppliers s ON wt.supplier_id = s.suppliers_id
-        ORDER BY s.name, wt.article
+        ORDER BY s.name, wt.created_at, wt.article
       `)
 
       // Группируем товары по поставщику
@@ -126,14 +126,13 @@ router.get(
       // Получаем все записи из wallpapers по wallpaper_types_id и подсчитываем общее количество в активных бронированиях
       const result = await client.query(
         `SELECT w.*, 
-                COALESCE(SUM(CASE WHEN r.status IN ('pending', 'processed') THEN ri.quantity ELSE 0 END), 0) AS total_reserved_quantity
+                COALESCE(SUM(CASE WHEN r.status IN ('pending', 'processed') THEN ri.quantity ELSE 0 END), 0)::INTEGER AS total_reserved_quantity
          FROM wallpapers w
          LEFT JOIN reservation_items ri ON w.wallpapers_id = ri.item_id 
          LEFT JOIN reservations r ON ri.reservation_id = r.reservations_id 
          WHERE w.wallpaper_type_id = $1 
          GROUP BY w.wallpapers_id
-         HAVING w.quantity > 0 OR COALESCE(SUM(CASE WHEN r.status IN ('pending', 'processed') THEN ri.quantity ELSE 0 END), 0) > 0
-         ORDER BY w.is_remaining, w.quantity DESC`,
+         ORDER BY w.is_remaining ASC, w.created_at ASC`,
         [wallpaper_types_id]
       )
 
