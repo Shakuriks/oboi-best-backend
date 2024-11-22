@@ -73,6 +73,119 @@ router.get(
 
 /**
  * @swagger
+ * /wallpaper-types/wallpaper-types-with-wallpapers:
+ *   get:
+ *     summary: Получение всех типов обоев с массивом связанных обоев
+ *     tags: [Wallpapers]
+ *     security:
+ *       - adminAuth: []
+ *       - managerAuth: []
+ *     responses:
+ *       200:
+ *         description: Список типов обоев с их связанными обоями
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   wallpaper_types_id:
+ *                     type: integer
+ *                     description: ID типа обоев
+ *                     example: 1
+ *                   article:
+ *                     type: string
+ *                     description: Артикул типа обоев
+ *                     example: A123
+ *                   wallpapers:
+ *                     type: array
+ *                     description: Список обоев, связанных с данным типом
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         wallpapers_id:
+ *                           type: integer
+ *                           description: ID обоев
+ *                           example: 101
+ *                         batch:
+ *                           type: string
+ *                           description: Партия обоев
+ *                           example: Batch001
+ *                         price:
+ *                           type: number
+ *                           description: Цена обоев
+ *                           example: 500
+ *                         quantity:
+ *                           type: integer
+ *                           description: Количество обоев
+ *                           example: 10
+ *       500:
+ *         description: Ошибка получения записей
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Ошибка получения записей
+ */
+
+router.get(
+  '/wallpaper-types-with-wallpapers',
+  authenticateAndAuthorize('admin', 'manager'),
+  async (req, res) => {
+    const client = await pool.connect()
+
+    try {
+      // Получаем все типы обоев с их id и article
+      const wallpaperTypesResult = await client.query(`
+      SELECT wt.wallpaper_types_id, wt.article
+      FROM wallpaper_types wt
+      ORDER BY wt.created_at, wt.article
+    `)
+
+      const wallpaperTypesWithWallpapers = []
+
+      // Для каждого типа обоев получаем связанные записи из таблицы wallpapers
+      for (const type of wallpaperTypesResult.rows) {
+        const wallpapersResult = await client.query(
+          `
+        SELECT w.wallpapers_id, w.batch, w.price, w.quantity
+        FROM wallpapers w
+        WHERE w.wallpaper_type_id = $1
+        ORDER BY w.is_remaining, w.created_at
+      `,
+          [type.wallpaper_types_id]
+        )
+
+        // Формируем результат для текущего типа обоев
+        wallpaperTypesWithWallpapers.push({
+          wallpaper_types_id: type.wallpaper_types_id,
+          article: type.article,
+          wallpapers: wallpapersResult.rows.map((w) => ({
+            wallpapers_id: w.wallpapers_id,
+            batch: w.batch, // Поле batch сразу после wallpapers_id
+            price: w.price,
+            quantity: w.quantity,
+          })),
+        })
+      }
+
+      // Отправляем ответ
+      res.status(200).json(wallpaperTypesWithWallpapers)
+    } catch (error) {
+      console.error('Ошибка при получении типов обоев:', error)
+      res.status(500).json({ message: 'Ошибка сервера.' })
+    } finally {
+      client.release()
+    }
+  }
+)
+
+/**
+ * @swagger
  * /wallpaper-types/{wallpaper_types_id}:
  *   get:
  *     summary: Получение обоев по типу
@@ -601,119 +714,6 @@ router.patch(
       res
         .status(500)
         .json({ message: 'Ошибка при изменении статуса Остаток товара' })
-    } finally {
-      client.release()
-    }
-  }
-)
-
-/**
- * @swagger
- * /wallpaper-types/wallpaper-types-with-wallpapers:
- *   get:
- *     summary: Получение всех типов обоев с массивом связанных обоев
- *     tags: [Wallpapers]
- *     security:
- *       - adminAuth: []
- *       - managerAuth: []
- *     responses:
- *       200:
- *         description: Список типов обоев с их связанными обоями
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   wallpaper_types_id:
- *                     type: integer
- *                     description: ID типа обоев
- *                     example: 1
- *                   article:
- *                     type: string
- *                     description: Артикул типа обоев
- *                     example: A123
- *                   wallpapers:
- *                     type: array
- *                     description: Список обоев, связанных с данным типом
- *                     items:
- *                       type: object
- *                       properties:
- *                         wallpapers_id:
- *                           type: integer
- *                           description: ID обоев
- *                           example: 101
- *                         batch:
- *                           type: string
- *                           description: Партия обоев
- *                           example: Batch001
- *                         price:
- *                           type: number
- *                           description: Цена обоев
- *                           example: 500
- *                         quantity:
- *                           type: integer
- *                           description: Количество обоев
- *                           example: 10
- *       500:
- *         description: Ошибка получения записей
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Ошибка получения записей
- */
-
-router.get(
-  '/wallpaper-types-with-wallpapers',
-  authenticateAndAuthorize('admin', 'manager'),
-  async (req, res) => {
-    const client = await pool.connect()
-
-    try {
-      // Получаем все типы обоев с их id и article
-      const wallpaperTypesResult = await client.query(`
-      SELECT wt.wallpaper_types_id, wt.article
-      FROM wallpaper_types wt
-      ORDER BY wt.created_at, wt.article
-    `)
-
-      const wallpaperTypesWithWallpapers = []
-
-      // Для каждого типа обоев получаем связанные записи из таблицы wallpapers
-      for (const type of wallpaperTypesResult.rows) {
-        const wallpapersResult = await client.query(
-          `
-        SELECT w.wallpapers_id, w.batch, w.price, w.quantity
-        FROM wallpapers w
-        WHERE w.wallpaper_type_id = $1
-        ORDER BY w.is_remaining, w.created_at
-      `,
-          [type.wallpaper_types_id]
-        )
-
-        // Формируем результат для текущего типа обоев
-        wallpaperTypesWithWallpapers.push({
-          wallpaper_types_id: type.wallpaper_types_id,
-          article: type.article,
-          wallpapers: wallpapersResult.rows.map((w) => ({
-            wallpapers_id: w.wallpapers_id,
-            batch: w.batch, // Поле batch сразу после wallpapers_id
-            price: w.price,
-            quantity: w.quantity,
-          })),
-        })
-      }
-
-      // Отправляем ответ
-      res.status(200).json(wallpaperTypesWithWallpapers)
-    } catch (error) {
-      console.error('Ошибка при получении типов обоев:', error)
-      res.status(500).json({ message: 'Ошибка сервера.' })
     } finally {
       client.release()
     }
