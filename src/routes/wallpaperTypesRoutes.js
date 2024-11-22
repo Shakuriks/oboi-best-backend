@@ -668,52 +668,56 @@ router.patch(
  *                   example: Ошибка получения записей
  */
 
-router.get('/wallpaper-types-with-wallpapers', async (req, res) => {
-  const client = await pool.connect()
+router.get(
+  '/wallpaper-types-with-wallpapers',
+  authenticateAndAuthorize('admin', 'manager'),
+  async (req, res) => {
+    const client = await pool.connect()
 
-  try {
-    // Получаем все типы обоев с их id и article
-    const wallpaperTypesResult = await client.query(`
+    try {
+      // Получаем все типы обоев с их id и article
+      const wallpaperTypesResult = await client.query(`
       SELECT wt.wallpaper_types_id, wt.article
       FROM wallpaper_types wt
       ORDER BY wt.created_at, wt.article
     `)
 
-    const wallpaperTypesWithWallpapers = []
+      const wallpaperTypesWithWallpapers = []
 
-    // Для каждого типа обоев получаем связанные записи из таблицы wallpapers
-    for (const type of wallpaperTypesResult.rows) {
-      const wallpapersResult = await client.query(
-        `
+      // Для каждого типа обоев получаем связанные записи из таблицы wallpapers
+      for (const type of wallpaperTypesResult.rows) {
+        const wallpapersResult = await client.query(
+          `
         SELECT w.wallpapers_id, w.batch, w.price, w.quantity
         FROM wallpapers w
         WHERE w.wallpaper_type_id = $1
         ORDER BY w.is_remaining, w.created_at
       `,
-        [type.wallpaper_types_id]
-      )
+          [type.wallpaper_types_id]
+        )
 
-      // Формируем результат для текущего типа обоев
-      wallpaperTypesWithWallpapers.push({
-        wallpaper_types_id: type.wallpaper_types_id,
-        article: type.article,
-        wallpapers: wallpapersResult.rows.map((w) => ({
-          wallpapers_id: w.wallpapers_id,
-          batch: w.batch, // Поле batch сразу после wallpapers_id
-          price: w.price,
-          quantity: w.quantity,
-        })),
-      })
+        // Формируем результат для текущего типа обоев
+        wallpaperTypesWithWallpapers.push({
+          wallpaper_types_id: type.wallpaper_types_id,
+          article: type.article,
+          wallpapers: wallpapersResult.rows.map((w) => ({
+            wallpapers_id: w.wallpapers_id,
+            batch: w.batch, // Поле batch сразу после wallpapers_id
+            price: w.price,
+            quantity: w.quantity,
+          })),
+        })
+      }
+
+      // Отправляем ответ
+      res.status(200).json(wallpaperTypesWithWallpapers)
+    } catch (error) {
+      console.error('Ошибка при получении типов обоев:', error)
+      res.status(500).json({ message: 'Ошибка сервера.' })
+    } finally {
+      client.release()
     }
-
-    // Отправляем ответ
-    res.status(200).json(wallpaperTypesWithWallpapers)
-  } catch (error) {
-    console.error('Ошибка при получении типов обоев:', error)
-    res.status(500).json({ message: 'Ошибка сервера.' })
-  } finally {
-    client.release()
   }
-})
+)
 
 module.exports = router
