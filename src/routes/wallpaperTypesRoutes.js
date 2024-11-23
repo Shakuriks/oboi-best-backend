@@ -424,8 +424,8 @@ router.delete(
          FROM wallpapers w
          LEFT JOIN reservation_items ri ON w.wallpapers_id = ri.item_id 
          LEFT JOIN reservations r ON ri.reservation_id = r.reservations_id 
-         WHERE w.wallpaper_type_id = $1`,
-        [wallpaper_type_id]
+         WHERE w.wallpapers_id = $1`,
+        [wallpaper_id]
       )
 
       const totalReservedQuantity = parseInt(
