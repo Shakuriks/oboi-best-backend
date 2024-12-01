@@ -61,9 +61,31 @@ router.get(
       // Преобразуем объект в массив
       const response = Object.values(suppliersProducts)
 
+      // Логируем успешное выполнение операции
+      await client.query(
+        `
+            INSERT INTO logs (code, text)
+            VALUES ($1, $2)
+          `,
+        [
+          200,
+          'Получение всех типов обоев с группировкой по поставщикам выполнено успешно.',
+        ]
+      )
+
       res.json(response)
     } catch (error) {
       console.error('Ошибка получения записей:', error)
+
+      // Логируем ошибку
+      await client.query(
+        `
+            INSERT INTO logs (code, text)
+            VALUES ($1, $2)
+          `,
+        [500, `Ошибка получения типов обоев: ${error.message}`]
+      )
+
       res.status(500).json({ message: 'Ошибка получения записей' })
     } finally {
       client.release()
@@ -172,11 +194,31 @@ router.get(
           })),
         })
       }
-
+      // Логируем успешное выполнение операции
+      await client.query(
+        `
+            INSERT INTO logs (code, text)
+            VALUES ($1, $2)
+          `,
+        [200, 'Получение всех типов обоев с соответствующими им партиями.']
+      )
       // Отправляем ответ
       res.status(200).json(wallpaperTypesWithWallpapers)
     } catch (error) {
       console.error('Ошибка при получении типов обоев:', error)
+
+      // Логируем ошибку
+      await client.query(
+        `
+            INSERT INTO logs (code, text)
+            VALUES ($1, $2)
+          `,
+        [
+          500,
+          `Ошибка получения типов обоев с соответствующими им партиями: ${error.message}`,
+        ]
+      )
+
       res.status(500).json({ message: 'Ошибка сервера.' })
     } finally {
       client.release()
@@ -248,11 +290,28 @@ router.get(
          ORDER BY w.is_remaining ASC, w.created_at ASC`,
         [wallpaper_types_id]
       )
-
+      // Логируем успешное выполнение операции
+      await client.query(
+        `
+            INSERT INTO logs (code, text)
+            VALUES ($1, $2)
+          `,
+        [200, 'Получение всех партий по типу обоев.']
+      )
       // Возвращаем пустой массив, если записи не найдены
       res.json(result.rows || [])
     } catch (error) {
       console.error('Ошибка получения записей:', error)
+
+      // Логируем ошибку
+      await client.query(
+        `
+            INSERT INTO logs (code, text)
+            VALUES ($1, $2)
+          `,
+        [500, `Ошибка получения партий по типу обоев.: ${error.message}`]
+      )
+
       res.status(500).json({ message: 'Ошибка получения записей' })
     } finally {
       client.release()

@@ -145,6 +145,16 @@ async function runMigrations() {
       );
     `)
 
+    // Таблица логов
+    await client.query(`
+        CREATE TABLE IF NOT EXISTS logs (
+          logs_id SERIAL PRIMARY KEY,
+          code VARCHAR NOT NULL,
+          text TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `)
+
     // Добавление поля price_tag_printed в таблицу wallpaper_types, если его нет
     await client.query(`
     DO $$ 

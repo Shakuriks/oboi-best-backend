@@ -11,6 +11,7 @@ const swaggerConfig = require('../swaggerConfig') // Подключаем кон
 const verificationRoutes = require('./routes/verificationCodeRoutes') // Путь к вашему файлу маршрутов
 const additionalProductsRoutes = require('./routes/additionalProductsRoutes')
 const transactionsRoutes = require('./routes/transactionsRoutes')
+const usersRoutes = require('./routes/usersRoutes')
 
 const app = express()
 app.use(express.json())
@@ -46,6 +47,7 @@ app.use('/verification', verificationRoutes)
 app.use('/suppliers', suppliersRoutes)
 app.use('/additional-products', additionalProductsRoutes)
 app.use('/transactions', transactionsRoutes)
+app.use('/users', usersRoutes)
 
 // Запуск сервера
 const PORT = process.env.PORT || 4000
