@@ -652,7 +652,7 @@ router.post(
 
 /**
  * @swagger
- * /api/supplies:
+ * /transactions/supply:
  *   post:
  *     summary: Запись новой поставки
  *     description: Эндпоинт для записи новой поставки товаров. Если товар с указанным article отсутствует в базе данных, он будет добавлен. Если товар существует, его данные обновляются. В таблице wallpapers записи создаются или обновляются в зависимости от наличия batch и wallpaper_type_id.
@@ -790,7 +790,7 @@ router.post(
  */
 
 router.post(
-  '/supplies',
+  '/supply',
   authenticateAndAuthorize('admin', 'manager'),
   async (req, res) => {
     const client = await pool.connect();
