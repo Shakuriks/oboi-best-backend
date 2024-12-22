@@ -647,4 +647,269 @@ router.post(
   }
 )
 
+
+
+
+/**
+ * @swagger
+ * /api/supplies:
+ *   post:
+ *     summary: Запись новой поставки
+ *     description: Эндпоинт для записи новой поставки товаров. Если товар с указанным article отсутствует в базе данных, он будет добавлен. Если товар существует, его данные обновляются. В таблице wallpapers записи создаются или обновляются в зависимости от наличия batch и wallpaper_type_id.
+ *     tags:
+ *       - Supplies
+ *     security:
+ *       - adminAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               supplier_id:
+ *                 type: integer
+ *                 description: ID поставщика.
+ *                 example: 1
+ *               products:
+ *                 type: array
+ *                 description: Массив товаров.
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     article:
+ *                       type: string
+ *                       description: Уникальный артикул товара.
+ *                       example: "A123"
+ *                     description:
+ *                       type: string
+ *                       description: Описание товара.
+ *                       example: "Stylish wallpaper"
+ *                     base_material:
+ *                       type: string
+ *                       description: Основной материал.
+ *                       example: "Vinyl"
+ *                     embossing:
+ *                       type: string
+ *                       description: Тип тиснения.
+ *                       example: "Textured"
+ *                     manufacturer:
+ *                       type: string
+ *                       description: Производитель.
+ *                       example: "Best Wallpapers Inc."
+ *                     image_url:
+ *                       type: string
+ *                       description: URL изображения товара.
+ *                       example: "https://example.com/images/a123.jpg"
+ *                     image_3d_url:
+ *                       type: string
+ *                       description: URL 3D изображения товара.
+ *                       example: "https://example.com/images/a123_3d.jpg"
+ *                     type:
+ *                       type: string
+ *                       description: Тип товара (1.06 или 0.53).
+ *                       enum:
+ *                         - "1.06"
+ *                         - "0.53"
+ *                       example: "1.06"
+ *                     batch:
+ *                       type: string
+ *                       description: Партия товара.
+ *                       example: "B001"
+ *                     shelf:
+ *                       type: integer
+ *                       description: Номер полки.
+ *                       example: 5
+ *                     row:
+ *                       type: integer
+ *                       description: Номер ряда.
+ *                       example: 3
+ *                     quantity:
+ *                       type: integer
+ *                       description: Количество товара.
+ *                       example: 20
+ *                     cost_price:
+ *                       type: integer
+ *                       description: Себестоимость товара.
+ *                       example: 100
+ *     responses:
+ *       201:
+ *         description: Поставка успешно записана.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Поставка успешно записана.
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       article:
+ *                         type: string
+ *                         description: Артикул товара.
+ *                         example: "A123"
+ *                       wallpaper_type_id:
+ *                         type: integer
+ *                         description: ID типа обоев.
+ *                         example: 10
+ *                       updated_quantity:
+ *                         type: integer
+ *                         description: Обновленное количество товара.
+ *                         example: 50
+ *                       new_wallpapers_id:
+ *                         type: integer
+ *                         description: ID новой записи в таблице wallpapers (если создана).
+ *                         example: 101
+ *       400:
+ *         description: Ошибка валидации данных.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Неверные данные в запросе.
+ *       500:
+ *         description: Внутренняя ошибка сервера.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Не удалось записать поставку.
+ *                 error:
+ *                   type: string
+ *                   example: Ошибка подключения к базе данных.
+ */
+
+router.post(
+  '/supplies',
+  authenticateAndAuthorize('admin', 'manager'),
+  async (req, res) => {
+    const client = await pool.connect();
+    try {
+      const { supplier_id, products } = req.body;
+
+      if (!supplier_id || !Array.isArray(products) || products.length === 0) {
+        return res.status(400).json({ message: 'Неверные данные для создания поставки' });
+      }
+
+      await client.query('BEGIN'); // Начинаем транзакцию
+
+      for (const product of products) {
+        const {
+          article,
+          description,
+          base_material,
+          embossing,
+          manufacturer,
+          image_url,
+          image_3d_url,
+          type,
+          batch,
+          shelf,
+          row,
+          quantity,
+          cost_price,
+        } = product;
+
+        // Рассчитываем цену как 1.5 * cost_price
+        const price = Math.round(cost_price * 1.5);
+
+        // Проверяем наличие записи в wallpaper_types
+        const wallpaperTypeResult = await client.query(
+          `
+            INSERT INTO wallpaper_types (
+              article, description, base_material, embossing, manufacturer, 
+              image_url, image_3d_url, type, supplier_id
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT (article) DO UPDATE SET
+              description = EXCLUDED.description,
+              base_material = EXCLUDED.base_material,
+              embossing = EXCLUDED.embossing,
+              manufacturer = EXCLUDED.manufacturer,
+              image_url = EXCLUDED.image_url,
+              image_3d_url = EXCLUDED.image_3d_url,
+              type = EXCLUDED.type
+            RETURNING wallpaper_type_id
+          `,
+          [article, description, base_material, embossing, manufacturer, image_url, image_3d_url, type, supplier_id]
+        );
+
+        const wallpaperTypeId = wallpaperTypeResult.rows[0].wallpaper_type_id;
+
+        // Проверяем наличие записи в wallpapers
+        const wallpaperResult = await client.query(
+          `
+            SELECT wallpaper_id, quantity
+            FROM wallpapers
+            WHERE wallpaper_type_id = $1 AND batch = $2
+          `,
+          [wallpaperTypeId, batch]
+        );
+
+        if (wallpaperResult.rowCount > 0) {
+          // Обновляем существующую запись
+          const existingWallpaper = wallpaperResult.rows[0];
+          await client.query(
+            `
+              UPDATE wallpapers
+              SET
+                shelf = $1,
+                row = $2,
+                quantity = quantity + $3,
+                cost_price = $4,
+                price = $5
+              WHERE wallpaper_id = $6
+            `,
+            [shelf, row, quantity, cost_price, price, existingWallpaper.wallpaper_id]
+          );
+        } else {
+          // Создаем новую запись
+          await client.query(
+            `
+              INSERT INTO wallpapers (
+                wallpaper_type_id, batch, shelf, row, quantity, price, cost_price
+              )
+              VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `,
+            [wallpaperTypeId, batch, shelf, row, quantity, price, cost_price]
+          );
+        }
+
+        // Обновляем price для всех записей с is_remaining = false
+        await client.query(
+          `
+            UPDATE wallpapers
+            SET price = $1
+            WHERE wallpaper_type_id = $2 AND is_remaining = false
+          `,
+          [price, wallpaperTypeId]
+        );
+      }
+
+      await client.query('COMMIT'); // Фиксируем транзакцию
+      res.status(200).json({ message: 'Поставка успешно добавлена' });
+    } catch (error) {
+      await client.query('ROLLBACK'); // Откатываем транзакцию в случае ошибки
+      console.error('Ошибка добавления поставки:', error);
+      res.status(500).json({ message: 'Ошибка добавления поставки' });
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
 module.exports = router
+
+
+
