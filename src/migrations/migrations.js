@@ -235,6 +235,26 @@ async function runMigrations() {
     END
     $$;
   `)
+    await client.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_views WHERE viewname = 'wallpaper_supplier_view') THEN
+        CREATE VIEW wallpaper_supplier_view AS
+        SELECT wt.*, s.name AS supplier_name
+        FROM wallpaper_types wt
+        JOIN suppliers s ON wt.supplier_id = s.suppliers_id
+        ORDER BY s.name, wt.created_at, wt.article;
+      END IF;
+    END;
+    $$;
+  `);
+
+    await client.query(`
+    CREATE INDEX idx_article ON wallpaper_types (article);
+  `)
+    await client.query(`
+    CREATE INDEX idx_batch ON wallpapers (batch);
+  `)
 
     console.log('Миграции выполнены успешно!')
   } catch (err) {

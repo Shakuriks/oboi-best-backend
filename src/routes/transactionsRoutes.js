@@ -793,13 +793,20 @@ router.post(
   '/supply',
   authenticateAndAuthorize('admin', 'manager'),
   async (req, res) => {
+    console.log(1)
     const client = await pool.connect();
+    console.log(2)
     try {
       const { supplier_id, products } = req.body;
+      console.log(3)
+      console.log(supplier_id)
+      console.log(Array.isArray(products))
+      console.log(products.length)
 
       if (!supplier_id || !Array.isArray(products) || products.length === 0) {
         return res.status(400).json({ message: 'Неверные данные для создания поставки' });
       }
+      console.log(4)
 
       await client.query('BEGIN'); // Начинаем транзакцию
 
@@ -819,6 +826,8 @@ router.post(
           quantity,
           cost_price,
         } = product;
+
+        console.log(5)
 
         // Рассчитываем цену как 1.5 * cost_price
         const price = Math.round(cost_price * 1.5);
@@ -844,6 +853,7 @@ router.post(
           [article, description, base_material, embossing, manufacturer, image_url, image_3d_url, type, supplier_id]
         );
 
+        console.log(6)
         const wallpaperTypeId = wallpaperTypeResult.rows[0].wallpaper_type_id;
 
         // Проверяем наличие записи в wallpapers
@@ -856,6 +866,7 @@ router.post(
           [wallpaperTypeId, batch]
         );
 
+        console.log(7)
         if (wallpaperResult.rowCount > 0) {
           // Обновляем существующую запись
           const existingWallpaper = wallpaperResult.rows[0];
@@ -872,6 +883,7 @@ router.post(
             `,
             [shelf, row, quantity, cost_price, price, existingWallpaper.wallpaper_id]
           );
+          console.log(8)
         } else {
           // Создаем новую запись
           await client.query(
@@ -883,6 +895,7 @@ router.post(
             `,
             [wallpaperTypeId, batch, shelf, row, quantity, price, cost_price]
           );
+          console.log(9)
         }
 
         // Обновляем price для всех записей с is_remaining = false
@@ -894,8 +907,10 @@ router.post(
           `,
           [price, wallpaperTypeId]
         );
+        console.log(10)
       }
 
+      console.log(11)
       await client.query('COMMIT'); // Фиксируем транзакцию
       res.status(200).json({ message: 'Поставка успешно добавлена' });
     } catch (error) {
@@ -903,6 +918,7 @@ router.post(
       console.error('Ошибка добавления поставки:', error);
       res.status(500).json({ message: 'Ошибка добавления поставки' });
     } finally {
+      console.log(12)
       client.release();
     }
   }
